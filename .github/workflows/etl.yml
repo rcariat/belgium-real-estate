@@ -1,0 +1,54 @@
+name: ETL Pipeline CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  etl-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start Docker Compose stack
+        run: docker compose up --build -d
+
+      - name: Show running containers
+        run: docker compose ps
+
+      - name: Show ETL logs
+        run: docker compose logs etl
+
+      - name: Wait for ETL to finish
+        run: |
+          for i in {1..30}; do
+            if docker compose ps etl | grep -q "Exited"; then
+              break
+            fi
+            sleep 10
+          done
+
+      - name: Check PostgreSQL tables
+        run: |
+          docker compose exec -T postgres psql -U postgres -d real_estate -c "\dt"
+
+      - name: Check int_transaction row count
+        run: |
+          docker compose exec -T postgres psql -U postgres -d real_estate -c "SELECT COUNT(*) FROM int_transaction;"
+
+      - name: Run sample validation query
+        run: |
+          docker compose exec -T postgres psql -U postgres -d real_estate -c "
+          SELECT property_type, COUNT(*)
+          FROM int_transaction
+          GROUP BY property_type
+          ORDER BY property_type;
+          "
+
+      - name: Shutdown stack
+        if: always()
+        run: docker compose down -v
