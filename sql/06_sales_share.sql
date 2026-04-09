@@ -26,7 +26,8 @@ SELECT
   municipality_name_fr,
   muni_sales,
   district_total_sales,
-  ROUND((100.0 * muni_sales / district_total_sales)::numeric, 2) AS sales_pct
+  ROUND((100.0 * muni_sales / district_total_sales)::numeric, 2) AS sales_pct,
+  rank
 FROM muni_sales
 WHERE rank <= 3
 ORDER BY district, rank;

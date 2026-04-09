@@ -15,5 +15,4 @@ SELECT
 FROM house_var
 WHERE cv_ratio is not null
 GROUP BY municipality_name_fr, district_name_fr
-ORDER BY avg_cv_pct DESC
-LIMIT 10;
+ORDER BY avg_cv_pct DESC;
